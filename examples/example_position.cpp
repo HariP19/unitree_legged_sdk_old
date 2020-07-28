@@ -103,7 +103,6 @@ void Custom::RobotControl()
             qInit[9] = state.motorState[RL_0].q;
             qInit[10] = state.motorState[RR_0].q;
             qInit[11] = state.motorState[RR_1].q;
-            qInit[12] = state.motorState[RR_2].q;
         }
         // second, move to the origin point of a sine movement with Kp Kd
         // if( motiontime >= 500 && motiontime < 1500){
@@ -118,8 +117,8 @@ void Custom::RobotControl()
                 qDes[i] = jointLinearInterpolation(qInit[i], standup_init[i], rate);
 
         }
-
-        std::copy(result.at(count).begin(), result.at(count).end(), qDes);    // writing values from csv to qDes  
+        if (motiontime >= 400)
+            std::copy(result.at(count).begin(), result.at(count).end(), qDes);    // writing values from csv to qDes  
        
         cmd.motorCmd[FL_0].q = qDes[0];
         cmd.motorCmd[FL_0].dq = 0;

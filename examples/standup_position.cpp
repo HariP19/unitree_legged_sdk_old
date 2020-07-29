@@ -103,9 +103,9 @@ void Custom::RobotControl()
             qInit[6] = state.motorState[RL_0].q;
             qInit[7] = state.motorState[RL_1].q;
             qInit[8] = state.motorState[RL_2].q;
-            qInit[9] = state.motorState[RL_0].q;
-            qInit[10] = state.motorState[RR_0].q;
-            qInit[11] = state.motorState[RR_1].q;
+            qInit[9] = state.motorState[RR_0].q;
+            qInit[10] = state.motorState[RR_1].q;
+            qInit[11] = state.motorState[RR_2].q;
         }
         // second, move to the origin point of a sine movement with Kp Kd
         // if( motiontime >= 500 && motiontime < 1500){

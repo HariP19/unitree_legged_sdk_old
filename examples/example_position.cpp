@@ -37,7 +37,7 @@ public:
     float qInit[12]={0};
     float qDes[12]={0};
     //float sin_mid_q[3] = {0.0, 1.2, -2.0};
-    float standup_init[12];
+    float standup_init[12]={0};
     float Kp = 0;  
     float Kd = 0;
     double time_consume = 0;
@@ -85,7 +85,8 @@ void Custom::RobotControl()
     cmd.motorCmd[RL_0].tau = +0.65f;
 
 
-
+    std::copy(result.at(0).being(), result.at(0).end(), standup_init);
+    
     // if( motiontime >= 100){
     if( motiontime >= 0){
         // first, get record initial position

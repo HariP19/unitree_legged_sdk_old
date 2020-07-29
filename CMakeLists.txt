@@ -12,6 +12,9 @@ set(EXTRA_LIBS -pthread libunitree_legged_sdk_amd64.so lcm)
 set(CMAKE_CXX_FLAGS "-O3")
 
 # one pc one process
+add_executable(standup_position examples/standup_position.cpp)
+target_link_libraries(standup_position ${EXTRA_LIBS})
+
 add_executable(example_position examples/example_position.cpp)
 target_link_libraries(example_position ${EXTRA_LIBS})
 

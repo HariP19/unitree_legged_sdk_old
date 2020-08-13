@@ -24,6 +24,7 @@ make
 
 ## Usage
 To run standup task with CSV
-'''bash
+```bash
 cd build
 sudo ./standup_position
+```

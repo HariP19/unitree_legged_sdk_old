@@ -12,6 +12,7 @@ Use of this source code is governed by the MPL-2.0 license, see LICENSE.
 #include <stdint.h>
 #include <stdlib.h>
 #include <sstream>
+#include "unitree_legged_sdk/threshold_filter.h"
 
 
 using namespace std;
@@ -46,6 +47,8 @@ public:
     int motiontime = 0;
     int count = 0;
     float dt = 0.002;     // 0.001~0.01
+    
+    legged_robot::ThresholdFilter filters[12];
 
     ofstream outfile;
 };
@@ -108,25 +111,30 @@ void Custom::RobotControl()
             qInit[9] = state.motorState[RR_0].q;
             qInit[10] = state.motorState[RR_1].q;
             qInit[11] = state.motorState[RR_2].q;
+            for (uint i=0; i<12; i++) {
+               filters[i].SetXfilter(standup_init[i]);
+               double max_vel = 1; // rad/s
+               filters[i].SetLimit(max_vel*dt);
+            }
         }
         // second, move to the origin point of a sine movement with Kp Kd
         // if( motiontime >= 500 && motiontime < 1500){
-        if( motiontime >= 10 && motiontime < 2000)
+        if( motiontime >= 10 && motiontime < 2500)
         {
             rate_count++;
-            double rate = rate_count/200.0;                       // needs count to 200
+            double rate = rate_count/2000.0;                       // needs count to 200
             Kp = 5.0; 
             Kd = 1.0;
             
-            for(int i=0; i<12; i++)
+            for(int i=0; i<12; i++) 
                 qDes[i] = jointLinearInterpolation(qInit[i], standup_init[i], rate);
         }
         
         if (motiontime >= 2000)
         {   
             count+=2;
-            std::copy(result.at(count).begin(), result.at(count).end(), qDes);    // writing values from csv to qDes  
-            
+            std::copy(result.at(count).begin(), result.at(count).end(), qDes);    // writing values from csv to qDes
+            for (uint i=0; i<12; i++) qDes[i]=filters[i].Filter(qDes[i]);
         }
 
 

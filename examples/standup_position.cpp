@@ -28,13 +28,13 @@ public:
     void RobotControl();
     void set_jointposes(std::vector< std::vector<float> >);
 
-
     Control control;
     UDP udp;
     LowCmd cmd = {0};
     LowState state = {0};
     std::vector< std::vector<float> > result;
     float qInit[12]={0};
+    float qCur[12]={0};
     float qDes[12]={0};
     //float sin_mid_q[3] = {0.0, 1.2, -2.0};
     float standup_init[12]={0};
@@ -46,6 +46,8 @@ public:
     int motiontime = 0;
     int count = 0;
     float dt = 0.002;     // 0.001~0.01
+
+    ofstream outfile;
 };
 
 void Custom::UDPRecv()
@@ -74,7 +76,7 @@ double jointLinearInterpolation(double initPos, double targetPos, double rate)
 void Custom::RobotControl() 
 {
 
-    count++;
+    
     motiontime++;
     udp.GetRecv(state);
     // printf("%d  %f\n", motiontime, state.motorState[FR_2].q);
@@ -109,7 +111,7 @@ void Custom::RobotControl()
         }
         // second, move to the origin point of a sine movement with Kp Kd
         // if( motiontime >= 500 && motiontime < 1500){
-        if( motiontime >= 10 && motiontime < 400)
+        if( motiontime >= 10 && motiontime < 2000)
         {
             rate_count++;
             double rate = rate_count/200.0;                       // needs count to 200
@@ -118,11 +120,16 @@ void Custom::RobotControl()
             
             for(int i=0; i<12; i++)
                 qDes[i] = jointLinearInterpolation(qInit[i], standup_init[i], rate);
-
         }
-        if (motiontime >= 400)
+        
+        if (motiontime >= 2000)
+        {   
+            count+=2;
             std::copy(result.at(count).begin(), result.at(count).end(), qDes);    // writing values from csv to qDes  
-       
+            
+        }
+
+
         cmd.motorCmd[FL_0].q = qDes[0];
         cmd.motorCmd[FL_0].dq = 0;
         cmd.motorCmd[FL_0].Kp = Kp;
@@ -195,6 +202,30 @@ void Custom::RobotControl()
         cmd.motorCmd[RR_2].Kd = Kd;
         cmd.motorCmd[RR_2].tau = 0.0f;
 
+
+        qCur[0] = state.motorState[FL_0].q;
+        qCur[1] = state.motorState[FL_1].q;
+        qCur[2] = state.motorState[FL_2].q;
+        qCur[3] = state.motorState[FR_0].q;
+        qCur[4] = state.motorState[FR_1].q;
+        qCur[5] = state.motorState[FR_2].q;
+        qCur[6] = state.motorState[RL_0].q;
+        qCur[7] = state.motorState[RL_1].q;
+        qCur[8] = state.motorState[RL_2].q;
+        qCur[9] = state.motorState[RR_0].q;
+        qCur[10] = state.motorState[RR_1].q;
+        qCur[11] = state.motorState[RR_2].q;
+
+
+        for(int i=0; i<12; i++){
+            if(i==0)
+                outfile << qCur[i];
+            else if(i > 0 && i < 11)
+                outfile << "," << qCur[i];
+            else
+                outfile << "," << qCur[i] << endl;
+        }
+
     }
 
     if(motiontime > 10){
@@ -251,6 +282,8 @@ int main(void)
     Custom custom;
     custom.set_jointposes(CSV_reader());
     std::cout << "File read successfully \n";
+
+    custom.outfile.open("result.csv");
 
     LoopFunc loop_control("control_loop", custom.dt,    boost::bind(&Custom::RobotControl, &custom));
     LoopFunc loop_udpSend("udp_send",     custom.dt, 3, boost::bind(&Custom::UDPSend,      &custom));

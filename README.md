@@ -23,4 +23,7 @@ make
 ```
 
 ## Usage
-Run examples with 'sudo' for memory locking.
+To run standup task with CSV
+'''bash
+cd build
+sudo ./standup_position

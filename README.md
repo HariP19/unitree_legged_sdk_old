@@ -23,7 +23,7 @@ make
 ```
 
 ## Usage
-To run standup task with CSV
+To run stand up task with CSV
 ```bash
 cd build
 sudo ./standup_position

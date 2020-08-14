@@ -92,6 +92,8 @@ void Custom::RobotControl()
 
 
     std::copy(result.at(0).begin(), result.at(0).end(), standup_init);  // initialising standup_init with the first row of the CSV record
+    for(int i=0; i<12; i++)
+	standup_init[i] = -standup_init[i];
     
     
     // if( motiontime >= 100){
@@ -113,7 +115,7 @@ void Custom::RobotControl()
             qInit[11] = state.motorState[RR_2].q;
             for (uint i=0; i<12; i++) {
                filters[i].SetXfilter(standup_init[i]);
-               double max_vel = 1; // rad/s
+               double max_vel = 3; // rad/s
                filters[i].SetLimit(max_vel*dt);
             }
         }
@@ -123,18 +125,20 @@ void Custom::RobotControl()
         {
             rate_count++;
             double rate = rate_count/2000.0;                       // needs count to 200
-            Kp = 5.0; 
-            Kd = 1.0;
+            Kp = 50.0; 
+            Kd = 5.0;
             
             for(int i=0; i<12; i++) 
                 qDes[i] = jointLinearInterpolation(qInit[i], standup_init[i], rate);
         }
         
-        if (motiontime >= 2000)
+        if (motiontime >= 2000 && motiontime < (2000+4999))
         {   
             count+=2;
+ //           Kp = 50.0; 
+ //           Kd = 5.0;
             std::copy(result.at(count).begin(), result.at(count).end(), qDes);    // writing values from csv to qDes
-            for (uint i=0; i<12; i++) qDes[i]=filters[i].Filter(qDes[i]);
+            for (uint i=0; i<12; i++) qDes[i]=filters[i].Filter(-qDes[i]);
         }
 
 
@@ -292,6 +296,10 @@ int main(void)
     std::cout << "File read successfully \n";
 
     custom.outfile.open("result.csv");
+
+    std::cout << "Sleeping for 90s \n"; 	
+    usleep(90000000);
+    std::cout<< "Starting the CSV \n";  
 
     LoopFunc loop_control("control_loop", custom.dt,    boost::bind(&Custom::RobotControl, &custom));
     LoopFunc loop_udpSend("udp_send",     custom.dt, 3, boost::bind(&Custom::UDPSend,      &custom));
